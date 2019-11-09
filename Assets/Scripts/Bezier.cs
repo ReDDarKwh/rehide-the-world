@@ -1,19 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 
 [RequireComponent(typeof(LineRenderer))]
 public class Bezier : MonoBehaviour
 {
-    public Transform[] controlPoints;
+    public Vector3[] controlPoints;
     public LineRenderer lineRenderer;
-    
-    private int curveCount = 0;    
+
+    private int curveCount = 0;
     private int layerOrder = 0;
     private int SEGMENT_COUNT = 50;
-    
-        
+
+
     void Start()
     {
         if (!lineRenderer)
@@ -22,44 +23,45 @@ public class Bezier : MonoBehaviour
         }
         lineRenderer.sortingLayerID = layerOrder;
         curveCount = (int)controlPoints.Length / 3;
+
+        DrawCurve();
     }
 
     void Update()
     {
-       
-        DrawCurve();
-
+        //lineRenderer.material.SetTextureOffset("_MainTex", new Vector2(Time.timeSinceLevelLoad * 4f, 0f));
     }
-    
+
     void DrawCurve()
     {
-        for (int j = 0; j <curveCount; j++)
+
+        var magnitude = 0f;
+        for (int j = 0; j < curveCount; j++)
         {
             for (int i = 1; i <= SEGMENT_COUNT; i++)
             {
                 float t = i / (float)SEGMENT_COUNT;
                 int nodeIndex = j * 3;
-                Vector3 pixel = CalculateCubicBezierPoint(t, controlPoints [nodeIndex].position, controlPoints [nodeIndex + 1].position, controlPoints [nodeIndex + 2].position, controlPoints [nodeIndex + 3].position);
-                lineRenderer.SetVertexCount(((j * SEGMENT_COUNT) + i));
-                lineRenderer.SetPosition((j * SEGMENT_COUNT) + (i - 1), pixel);
+                Vector3 pixel = CalculateCubicBezierPoint(t, controlPoints[nodeIndex], controlPoints[nodeIndex + 1], controlPoints[nodeIndex + 3]);
+                lineRenderer.positionCount = (((j * SEGMENT_COUNT) + i));
+
+
+                int index = (j * SEGMENT_COUNT) + (i - 1);
+
+                lineRenderer.SetPosition(index, pixel);
+
+                magnitude += index > 0? (lineRenderer.GetPosition(index - 1) - pixel).magnitude : 0;
             }
-            
+
         }
+
+        lineRenderer.material.SetTextureScale("_MainTex", new Vector2(magnitude, 1f));
     }
-        
-    Vector3 CalculateCubicBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+
+    Vector3 CalculateCubicBezierPoint(float t, Vector3 start, Vector3 controlPoint, Vector3 end)
     {
-        float u = 1 - t;
-        float tt = t * t;
-        float uu = u * u;
-        float uuu = uu * u;
-        float ttt = tt * t;
-        
-        Vector3 p = uuu * p0; 
-        p += 3 * uu * t * p1; 
-        p += 3 * u * tt * p2; 
-        p += ttt * p3; 
-        
-        return p;
+        Vector3 m1 = Vector3.Lerp(start, controlPoint, t);
+        Vector3 m2 = Vector3.Lerp(controlPoint, end, t);
+        return Vector3.Lerp(m1, m2, t);
     }
 }

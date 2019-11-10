@@ -23,14 +23,18 @@ public class Missile : MonoBehaviour
 
     bool isDestoyed = false;
 
+    public int miniGameIndex;
+
 
     Vector3 start;
     Vector3 end;
     Vector3 controlPoint;
 
     public Animator animator;
-    internal SceneManager manager;
+    
     public float selectionRadius;
+
+    public event EventHandler<Missile> selected;
 
     void Start()
     {
@@ -57,8 +61,7 @@ public class Missile : MonoBehaviour
         Destroy(this.gameObject, 1);
     }
 
-    void Select(){
-        this.manager.SetSelectedMissile(this);
+    public void Select(){
         this.animator.SetBool("Selected", true);
     }
 
@@ -76,7 +79,7 @@ public class Missile : MonoBehaviour
         {
             if ((this.transform.position - mousePos).magnitude < selectionRadius)
             {
-                Select();
+                selected.Invoke(this, this);
             }
         }
 

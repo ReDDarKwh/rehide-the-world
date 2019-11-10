@@ -9,6 +9,8 @@ public class Land : MonoBehaviour
 
     public SpriteRenderer renderer;
 
+    public event EventHandler<Land> destroyed;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,6 +25,7 @@ public class Land : MonoBehaviour
 
     internal void kill()
     {
+        destroyed.Invoke(this, this);
         Debug.Log("BOOM!");
         renderer.color = Color.blue;
         isDestroyed = true;
